@@ -1,36 +1,69 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
+const bcrypt = require('bcrypt');
 
-// Test database connection
-router.get('/test-db', async (req, res) => {
+// Test login flow step by step
+router.post('/test-login', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT 1 + 1 AS result');
+        const { email, password } = req.body;
+
+        // Step 1: Find user
+        const [users] = await db.query(
+            'SELECT id, name, email, password, is_global_admin FROM users WHERE email = ?',
+            [email]
+        );
+
+        if (users.length === 0) {
+            return res.json({
+                step: 1,
+                success: false,
+                message: 'User not found',
+                email: email
+            });
+        }
+
+        const user = users[0];
+
+        // Step 2: Verify password
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.json({
+                step: 2,
+                success: false,
+                message: 'Invalid password',
+                user: { id: user.id, email: user.email }
+            });
+        }
+
+        // Step 3: Get companies
+        const [companies] = await db.query(
+            `SELECT c.id, c.name, ucr.role 
+             FROM companies c
+             INNER JOIN user_company_roles ucr ON c.id = ucr.company_id
+             WHERE ucr.user_id = ?`,
+            [user.id]
+        );
+
         res.json({
+            step: 3,
             success: true,
-            message: 'Database connection successful',
-            result: rows[0].result,
-            env: {
-                DB_HOST: process.env.DB_HOST ? 'Set' : 'Missing',
-                DB_USER: process.env.DB_USER ? 'Set' : 'Missing',
-                DB_NAME: process.env.DB_NAME ? 'Set' : 'Missing',
-                DB_PORT: process.env.DB_PORT || 'Default (3306)',
-                NODE_ENV: process.env.NODE_ENV
-            }
+            message: 'All steps passed',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                is_global_admin: user.is_global_admin
+            },
+            companies: companies,
+            companiesCount: companies.length
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Database connection failed',
             error: error.message,
-            code: error.code,
-            env: {
-                DB_HOST: process.env.DB_HOST ? 'Set' : 'Missing',
-                DB_USER: process.env.DB_USER ? 'Set' : 'Missing',
-                DB_NAME: process.env.DB_NAME ? 'Set' : 'Missing',
-                DB_PORT: process.env.DB_PORT || 'Default (3306)',
-                NODE_ENV: process.env.NODE_ENV
-            }
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
