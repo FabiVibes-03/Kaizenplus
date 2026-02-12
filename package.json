@@ -1,0 +1,27 @@
+{
+  "name": "todokaizen",
+  "version": "1.0.0",
+  "description": "Kaizen+ Team Optimization Platform - Backend API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "expo": "~54.0.33",
+    "express": "^5.2.1",
+    "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.17.0",
+    "node-cron": "^4.2.1",
+    "react-dom": "19.1.0",
+    "react-native-web": "^0.21.0"
+  }
+}
