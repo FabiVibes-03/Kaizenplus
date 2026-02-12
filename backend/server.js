@@ -43,6 +43,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/diagnostic', require('./routes/diagnostic'));
 
 app.get('/api', (req, res) => {
     res.json({
